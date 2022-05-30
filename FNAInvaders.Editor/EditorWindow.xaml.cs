@@ -1,9 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
-using DefaultEcs;
-using DefaultEcs.System;
-using Microsoft.Xna.Framework;
 
 namespace FNAInvaders.Editor;
 
@@ -47,7 +44,7 @@ public partial class EditorWindow : Window
         return IntPtr.Zero;
     }
 
-    public static CancellationTokenSource StartEditor(World world, ISystem<GameTime> mainSystem, int left, int top)
+    public static CancellationTokenSource StartEditor(object context, int left, int top)
     {
         var cts = new CancellationTokenSource();
         var thread = new Thread(() =>
@@ -58,7 +55,7 @@ public partial class EditorWindow : Window
             window.InitializeComponent();
             window.Top = top;
             window.Left = left;
-            window.DataContext = new EditorViewModel(world, mainSystem);
+            window.DataContext = context;
             app.Run(window);
         });
         thread.SetApartmentState(ApartmentState.STA);

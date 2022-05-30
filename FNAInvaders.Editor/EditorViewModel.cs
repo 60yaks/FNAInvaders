@@ -2,13 +2,16 @@ using DefaultEcs;
 using DefaultEcs.Serialization;
 using DefaultEcs.System;
 using Microsoft.Xna.Framework;
+using PropertyChanged;
 
 namespace FNAInvaders.Editor;
 
+[AddINotifyPropertyChangedInterface]
 public record EditorViewModel(World World, ISystem<GameTime> MainSystem)
 {
     public IEnumerable<ISystem<GameTime>> Systems => (IEnumerable<ISystem<GameTime>>)MainSystem;
     public IEnumerable<EntityViewModel> Entities => World.Select(e => new EntityViewModel(e));
+    public EntityViewModel SelectedEntity { get; set; }
 }
 
 public class EntityViewModel : IComponentReader

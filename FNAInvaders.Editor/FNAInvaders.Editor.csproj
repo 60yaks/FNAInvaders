@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="DefaultEcs" Version="0.17.2" />
+    <PackageReference Include="PropertyChanged.Fody" Version="3.4.1" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

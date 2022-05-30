@@ -60,7 +60,7 @@ internal class EcsGame : Game
         player.Set(new ManagedResource<string, Texture2D>("enemyBlue1.png"));
 
 #if DEBUG
-        _editor = Editor.EditorWindow.StartEditor(_world, _mainSystem, Window.ClientBounds.Right, Window.ClientBounds.Top);
+        _editor = Editor.EditorWindow.StartEditor(new Editor.EditorViewModel(_world, _mainSystem), Window.ClientBounds.Right, Window.ClientBounds.Top);
 #endif
     }
 
