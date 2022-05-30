@@ -47,7 +47,7 @@ internal class EcsGame : Game
         _textureResourceManager.Manage(_world);
 
         _mainSystem = new CustomSequentialSystem<GameTime>(
-            new DrawSystem(_spriteBatch, _world));
+            new DrawSystem(_world, _spriteBatch));
 
         var player = _world.CreateEntity();
         player.Set(new PositionComponent { Value = new Point(640, 360) });
