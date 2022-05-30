@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace FNAInvaders.Components;
 
-public struct DrawComponent
+public struct DrawInfo
 {
     public Point Size;
     public Color Color;

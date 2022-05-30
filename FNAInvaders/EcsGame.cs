@@ -16,7 +16,8 @@ internal class EcsGame : Game
     private SpriteBatch _spriteBatch;
     private TextureResourceManager _textureResourceManager;
     private World _world;
-    private ISystem<GameTime> _mainSystem;
+    private ISystem<GameTime> _updateSystem;
+    private ISystem<GameTime> _drawSystem;
     private DefaultParallelRunner _runner;
 
 #if DEBUG
@@ -39,35 +40,50 @@ internal class EcsGame : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        _world = new World(1000);
+        _world = new World(100);
 
         _runner = new DefaultParallelRunner(Environment.ProcessorCount);
 
         _textureResourceManager = new TextureResourceManager(GraphicsDevice);
         _textureResourceManager.Manage(_world);
 
-        _mainSystem = new CustomSequentialSystem<GameTime>(
-            new DrawSystem(_world, _spriteBatch));
+        _updateSystem = new EnumerableSequentialSystem<GameTime>(
+            new InputGatherSystem(_world),
+            new ApplyInputSystem(_world)
+        );
+        _drawSystem = new EnumerableSequentialSystem<GameTime>(
+            new DrawSystem(_world, _runner, _spriteBatch)
+        );
+
+        _world.SetMaxCapacity<GameWorldData>(1);
+        _world.Set(new GameWorldData { Bounds = new Rectangle(50, 50, 1180, 620) });
 
         var player = _world.CreateEntity();
-        player.Set(new PositionComponent { Value = new Point(640, 360) });
-        player.Set(new DrawComponent { Color = Color.White, Scale = 1f });
+        player.SetSameAsWorld<GameWorldData>();
+        player.Set(new PlayerTag());
+        player.Set(new InputData());
+        player.Set(new SpeedData { Value = 0.75 });
+        player.Set(new Position { Value = new Point(640, 670) });
+        player.Set(new DrawInfo { Color = Color.White, Scale = 1f });
         player.Set(new ManagedResource<string, Texture2D>("playerShip1_red.png"));
 
-        player = _world.CreateEntity();
-        player.Set(new PositionComponent { Value = new Point(320, 360) });
-        player.Set(new DrawComponent { Color = Color.White, Scale = 1f });
-        player.Set(new ManagedResource<string, Texture2D>("enemyBlue1.png"));
-
 #if DEBUG
-        _editor = Editor.EditorWindow.StartEditor(new Editor.EditorViewModel(_world, _mainSystem), Window.ClientBounds.Right, Window.ClientBounds.Top);
+        _editor = Editor.EditorWindow.StartEditor(
+            new Editor.EditorViewModel<GameTime>(_updateSystem, _drawSystem),
+            Window.ClientBounds.Right,
+            Window.ClientBounds.Top);
 #endif
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        _updateSystem.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.Black);
-        _mainSystem.Update(gameTime);
+        _drawSystem.Update(gameTime);
     }
 
     protected override void Dispose(bool disposing)
@@ -76,7 +92,7 @@ internal class EcsGame : Game
         _editor.Cancel();
 #endif
 
-        _mainSystem.Dispose();
+        _drawSystem.Dispose();
         _runner.Dispose();
         _world.Dispose();
         _textureResourceManager.Dispose();

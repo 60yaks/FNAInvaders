@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace FNAInvaders.Systems;
 
-[With(typeof(PositionComponent), typeof(DrawComponent))]
+[With(typeof(Position), typeof(DrawInfo))]
 public partial class DrawSystem : AEntitySetSystem<GameTime>
 {
     [ConstructorParameter]
@@ -14,7 +14,7 @@ public partial class DrawSystem : AEntitySetSystem<GameTime>
     protected override void PreUpdate(GameTime state) => _spriteBatch.Begin();
 
     [Update]
-    private void Update(in PositionComponent position, in DrawComponent drawInfo)
+    private void Update(in Position position, in DrawInfo drawInfo)
     {
         _spriteBatch.Draw(
             drawInfo.Texture,

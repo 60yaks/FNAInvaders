@@ -18,7 +18,10 @@ internal sealed class TextureResourceManager : AResourceManager<string, Texture2
 
     protected override void OnResourceLoaded(in Entity entity, string info, Texture2D resource)
     {
-        entity.Get<DrawComponent>().Texture = resource;
-        entity.Get<DrawComponent>().Size = new Point(resource.Width, resource.Height);
+        if (entity.Has<DrawInfo>())
+        {
+            entity.Get<DrawInfo>().Texture = resource;
+            entity.Get<DrawInfo>().Size = new Point(resource.Width, resource.Height);
+        }
     }
 }

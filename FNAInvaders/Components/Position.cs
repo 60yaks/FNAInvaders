@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 
 namespace FNAInvaders.Components;
 
-public struct PositionComponent
+public struct Position
 {
     public Point Value;
 }
