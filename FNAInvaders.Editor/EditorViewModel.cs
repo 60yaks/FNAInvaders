@@ -17,7 +17,8 @@ public class EditorViewModel<T>
     }
 
     public IEnumerable<SystemViewModel<T>> Systems { get; }
-    public IEnumerable<EntityViewModel> Entities { get; }
+
+    public SystemViewModel<T> SelectedSystem { get; set; }
 }
 
 [AddINotifyPropertyChangedInterface]
@@ -28,15 +29,25 @@ public class SystemViewModel<T>
     {
         _system = system;
 
-        Name = name ?? GetFriendlyName(system.GetType());
+        Name = name ?? system.GetType().FriendlyName();
 
         if (system is IEnumerable<ISystem<T>> enumerable)
         {
             Children = enumerable.Select(s => new SystemViewModel<T>(s)).ToArray();
         }
+
+        if (system is AEntitySetSystem<T> entitySystem)
+        {
+            entitySystem.Set.EntityAdded += (in Entity _) => RefreshEntities(entitySystem.Set);
+            entitySystem.Set.EntityRemoved += (in Entity _) => RefreshEntities(entitySystem.Set);
+            RefreshEntities(entitySystem.Set);
+        }
     }
 
     public string Name { get; }
+    public IEnumerable<SystemViewModel<T>> Children { get; }
+    public IEnumerable<EntityViewModel> Entities { get; set; }
+    public EntityViewModel SelectedEntity { get; set; }
 
     public bool Enabled
     {
@@ -44,38 +55,22 @@ public class SystemViewModel<T>
         set => _system.IsEnabled = value;
     }
 
-    public IEnumerable<SystemViewModel<T>> Children { get; }
-
-    private static string GetFriendlyName(Type type)
+    private void RefreshEntities(EntitySet entitySet)
     {
-        if (type == typeof(int))
-            return "int";
-        else if (type == typeof(short))
-            return "short";
-        else if (type == typeof(byte))
-            return "byte";
-        else if (type == typeof(bool))
-            return "bool";
-        else if (type == typeof(long))
-            return "long";
-        else if (type == typeof(float))
-            return "float";
-        else if (type == typeof(double))
-            return "double";
-        else if (type == typeof(decimal))
-            return "decimal";
-        else if (type == typeof(string))
-            return "string";
-        else if (type.IsGenericType)
-            return type.Name.Split('`')[0] + "<" + string.Join(", ", type.GetGenericArguments().Select(x => GetFriendlyName(x)).ToArray()) + ">";
-        else
-            return type.Name;
+        var entities = entitySet.GetEntities();
+        var viewModels = new EntityViewModel[entitySet.Count];
+        for (var i = 0; i < entitySet.Count; i++)
+        {
+            viewModels[i] = new(entities[i]);
+        }
+        Entities = viewModels;
     }
 }
 
+[AddINotifyPropertyChangedInterface]
 public class EntityViewModel : IComponentReader
 {
-    private readonly List<string> _components = new();
+    private readonly List<ComponentViewModel> _components = new();
 
     public EntityViewModel(Entity entity)
     {
@@ -84,8 +79,8 @@ public class EntityViewModel : IComponentReader
     }
 
     public Entity Entity { get; }
-    public override string ToString() => Entity.ToString();
-    public IEnumerable<string> Components => _components;
+    public string Name => Entity.ToString();
+    public IEnumerable<ComponentViewModel> Components => _components;
     public bool Enabled
     {
         get => Entity.IsEnabled();
@@ -96,5 +91,15 @@ public class EntityViewModel : IComponentReader
         }
     }
 
-    public void OnRead<T>(in T component, in Entity componentOwner) => _components.Add(component.ToString());
+    public void OnRead<T>(in T component, in Entity componentOwner) =>
+        _components.Add(new ComponentViewModel
+        {
+            Name = component.GetType().FriendlyName()
+        });
+}
+
+[AddINotifyPropertyChangedInterface]
+public class ComponentViewModel
+{
+    public string Name { get; set; }
 }

@@ -2,7 +2,7 @@
     x:Class="FNAInvaders.Editor.EditorWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="clr-namespace:FNAInvaders.Editor.Converters"
+    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:FNAInvaders.Editor"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,6 +11,33 @@
     Height="720"
     mc:Ignorable="d">
 
+    <Window.Resources>
+        <DataTemplate x:Key="EntityName">
+            <TextBlock Text="{Binding Name}" />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type local:EntityViewModel}">
+            <ItemsControl ItemsSource="{Binding Components}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type local:ComponentViewModel}">
+            <Border
+                Margin="2"
+                Padding="4,2"
+                Background="LightCyan"
+                BorderBrush="DarkCyan"
+                BorderThickness="1">
+                <TextBlock Text="{Binding Name}" />
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -18,6 +45,9 @@
         </Grid.ColumnDefinitions>
 
         <TreeView ItemsSource="{Binding Systems}">
+            <b:Interaction.Behaviors>
+                <local:BindableSelectedItemBehavior SelectedItem="{Binding SelectedSystem, Mode=TwoWay}" />
+            </b:Interaction.Behaviors>
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}">
                     <Setter Property="IsExpanded" Value="True" />
@@ -25,9 +55,34 @@
             </TreeView.ItemContainerStyle>
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                    <CheckBox Content="{Binding Name}" IsChecked="{Binding Enabled}" />
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding Enabled}" />
+                        <Label Content="{Binding Name}" />
+                    </StackPanel>
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
+
+        <ContentControl Grid.Column="1" Content="{Binding SelectedSystem}">
+            <ContentControl.ContentTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Label Content="{Binding Name}" />
+                        <ListBox
+                            Grid.Row="1"
+                            ItemTemplate="{StaticResource EntityName}"
+                            ItemsSource="{Binding Entities}"
+                            SelectedItem="{Binding SelectedEntity}" />
+                        <ContentControl Grid.Row="2" Content="{Binding SelectedEntity}" />
+                    </Grid>
+                </DataTemplate>
+            </ContentControl.ContentTemplate>
+        </ContentControl>
+
     </Grid>
 </Window>
